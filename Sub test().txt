@@ -1,0 +1,80 @@
+Sub test()
+    'declare variables
+    Dim ws As Worksheet
+    Dim outputrow As Integer
+    Dim quartercount As Integer
+    Dim opening As Double
+    Dim closing As Double
+    Dim diff As Double
+    Dim perc As String
+    Dim total As Double
+    Dim quarterstart As Date
+    Dim quarterend As Date
+    
+    Dim row As Long
+    
+    'For each sheet, Q1,Q2,Q3,Q4
+    For Each ws In ActiveWorkbook.Worksheets
+	'initialize variables, these reset for each sheet
+        row = 2
+        outputrow = 2
+        opening = 0
+        closing = 0
+        diff = 0
+        total = 0
+        
+	'set the quarter start and end dates based on the name of the active sheet
+        Select Case ws.Name
+            Case "Q1"
+                quarterstart = "1/2/2022"
+                quarterend = "3/31/2022"
+            Case "Q2"
+                quarterstart = "4/1/2022"
+                quarterend = "6/30/2022"
+            Case "Q3"
+                quarterstart = "7/1/2022"
+                quarterend = "9/30/2022"
+            Case "Q4"
+                quarterstart = "10/1/2022"
+                quarterend = "12/31/2022"
+        End Select
+        
+	'Set the column names for the output
+        ws.Cells(1, "I").Value = "Ticker"
+        ws.Cells(1, "J").Value = "Quarterly Change"
+        ws.Cells(1, "K").Value = "Percentage Change"
+        ws.Cells(1, "L").Value = "Total Stock Volume"
+        
+	'Loop for every row in the active sheet
+        Do While row < ws.Cells(ws.Rows.Count, "A").End(xlUp).row + 1
+	    'First we add the stock value to the total
+            total = total + ws.Cells(row, "G").Value
+            
+	    'if it's the quarter start row then capture the starting value
+            If ws.Cells(row, "B").Value = quarterstart Then
+               opening = ws.Cells(row, "C").Value
+               ws.Cells(outputrow, "I").Value = ws.Cells(row, "A")
+            End If
+            
+    	    'if it's the quarter end row then capture the Closing value
+            If ws.Cells(row, "B").Value = quarterend Then
+               closing = ws.Cells(row, "F").Value
+		'calculate the difference between opening and closing
+               diff = closing - opening
+               ws.Cells(outputrow, "J").Value = diff
+		'format it as a percent
+               perc = FormatPercent(diff / opening, 2)
+		'output the percent and the total
+               ws.Cells(outputrow, "K").Value = perc
+               ws.Cells(outputrow, "L").Value = total
+		'because this is the last row we reset the total to zero for the next stock
+               total = 0
+		'increment the output row
+               outputrow = outputrow + 1
+            End If
+            
+	    'increment the target row
+            row = row + 1
+        Loop
+    Next
+End Sub
